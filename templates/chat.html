@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2f3136;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            margin: 20px 0;
+        }
+        #messages {
+            width: 80%;
+            height: 70%;
+            background: #42454a;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            overflow-y: scroll;
+            resize: none;
+        }
+        #messageInput {
+            width: 70%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px;
+            background: #7289da;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #5b6eae;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Room</h1>
+    <textarea id="messages" readonly></textarea><br>
+    <input id="messageInput" type="text" placeholder="Type a message..." required>
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        let ws;
+
+        function connect(username) {
+            ws = new WebSocket("ws://localhost:8000/ws?username=" + username);
+            ws.onmessage = function(event) {
+                let messages = document.getElementById('messages');
+                messages.value += event.data + '\\n';
+                messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
+            };
+        }
+
+        function sendMessage() {
+            let input = document.getElementById("messageInput");
+            if (input.value) {
+                ws.send(input.value);
+                input.value = '';
+            }
+        }
+
+        // Send message on pressing Enter
+        document.getElementById("messageInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Prevent the default action (form submission)
+                sendMessage();
+            }
+        });
+
+        // Get the username from the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        connect(username); // Connect to WebSocket with username
+    </script>
+</body>
+</html>
